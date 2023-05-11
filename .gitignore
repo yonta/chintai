@@ -1,3 +1,7 @@
+# credentials
+/client_secret*.json
+/token.yml
+
 *.gem
 *.rbc
 /.config
