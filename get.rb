@@ -8,6 +8,10 @@ def is_homes?(url)
   url.include?("homes.co.jp")
 end
 
+def is_shamaison?(url)
+  url.include?("shamaison.com")
+end
+
 def homes_to_line(url)
   html = URI.parse(url).open.read
   doc = Nokogiri::HTML.parse(html)
@@ -35,9 +39,26 @@ def homes_to_line(url)
   "#{name},,,#{url},#{address},,,,#{rent_total},#{floor_area},#{floor_ldk},#{floor_room1},,#{floor_room2}\n"
 end
 
+def shamaison_to_line(url)
+  html = URI.parse(url).open.read
+  doc = Nokogiri::HTML.parse(html)
+
+  name = doc.at_css(".prBox h1 div")&.text
+  address = doc.at_css(".detailClmRight td .bp")&.text
+  rent = doc.at_css(".detailClmRight .tableBoxLeft")&.text&.match(/家賃[\s\n\r]*(?<base>[\d\,]+)円.*共益費等[\s\n\r]*(?<ext>[\d\,]+)円/m)
+  rent_base = rent[:base].delete(",").to_f * 0.0001
+  rent_ext = rent[:ext].delete(",").to_f * 0.0001
+  rent_total = rent_base + rent_ext
+  floor_area = doc.at_css(".tableBoxRight")&.text&.match(/専有面積[\s\r\n]+(?<area>[\d\.]+)m/)[:area]
+
+  "#{name},,,#{url},#{address},,,,#{rent_total},#{floor_area}\n"
+end
+
 def print_line(url)
   if is_homes?(url)
     print homes_to_line(url)
+  elsif is_shamaison?(url)
+    print shamaison_to_line(url)
   else
     print "Unknown URL\n"
   end
