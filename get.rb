@@ -60,7 +60,7 @@ def homes_to_line(url)
   floor_area = doc.at_css(".bukkenSpec #chk-bkc-housearea")&.text&.strip&.match(/(?<area>[\d\.]+)m²/)[:area]
 
   floors = doc.at_css(".bukkenSpec #chk-bkc-marodi")&.text&.strip
-  floor_ldk = floors.match(/リビングダイニングキッチン\s*(?<ldk>[\d\.]+)帖/)[:ldk].to_f
+  floor_ldk = floors.match(/(リビングダイニングキッチン|ダイニングキッチン)\s*(?<ldk>[\d\.]+)帖/)[:ldk].to_f
   floor_rooms = floors.match(/洋室\s*(?<room1>[\d\.]+)帖.*洋室\s*(?<room2>[\d\.]+)帖/m)
   floor_room1 = floor_rooms[:room1]
   floor_room2 = floor_rooms[:room2]
