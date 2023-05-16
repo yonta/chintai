@@ -12,6 +12,35 @@ def is_shamaison?(url)
   url.include?("shamaison.com")
 end
 
+def get_commute_time(address)
+  address = "東京都足立区南花畑2丁目"
+  params = URI.encode_www_form([["to", "築地小山ビル"],
+                                ["from", address],
+                                ["y", "2023"],
+                                ["m", "05"],
+                                ["d", "09"],
+                                ["hh", "10"],
+                                ["m1", "0"],
+                                ["m2", "0"],
+                                ["type", "1"],
+                                ["ticket", "ic"],
+                                ["expkind", "1"],
+                                ["userpass", "1"],
+                                ["ws", "2"],
+                                ["s", "0"],
+                                ["al", "1"],
+                                ["shin", "1"],
+                                ["ex", "1"],
+                                ["hb", "1"],
+                                ["lb", "1"],
+                                ["sr", "1"]])
+  url = "https://transit.yahoo.co.jp/search/result?#{params}"
+  html = URI.parse(url).open.read
+  doc = Nokogiri::HTML.parse(html)
+
+  doc.at_css(".routeList .time .small")&.text&.strip&.match(/(?<commute>\d+)分/)[:commute]
+end
+
 def homes_to_line(url)
   html = URI.parse(url).open.read
   doc = Nokogiri::HTML.parse(html)
@@ -36,7 +65,9 @@ def homes_to_line(url)
   floor_room1 = floor_rooms[:room1]
   floor_room2 = floor_rooms[:room2]
 
-  "#{name},,,#{url},#{address},,,,#{rent_total},#{floor_area},#{floor_ldk},#{floor_room1},,#{floor_room2}\n"
+  commute = get_commute_time(address)
+
+  "#{name},,,#{url},#{address},,,#{commute},#{rent_total},#{floor_area},#{floor_ldk},#{floor_room1},,#{floor_room2}\n"
 end
 
 def shamaison_to_line(url)
@@ -50,8 +81,9 @@ def shamaison_to_line(url)
   rent_ext = rent[:ext].delete(",").to_f * 0.0001
   rent_total = rent_base + rent_ext
   floor_area = doc.at_css(".tableBoxRight")&.text&.match(/専有面積[\s\r\n]+(?<area>[\d\.]+)m/)[:area]
+  commute = get_commute_time(address)
 
-  "#{name},,,#{url},#{address},,,,#{rent_total},#{floor_area}\n"
+  "#{name},,,#{url},#{address},,,#{commute},#{rent_total},#{floor_area}\n"
 end
 
 def print_line(url)
